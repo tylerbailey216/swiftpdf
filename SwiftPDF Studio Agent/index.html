@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SwiftPDF Studio Agent</title>
+  <link rel="stylesheet" href="agent.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <img src="../SwiftPDF%20Studio%20Logo.png" alt="" />
+        </div>
+      <div class="brand-copy">
+          <h1>SwiftPDF Studio Agent</h1>
+          <p>Simple button guide for SwiftPDF Studio. Works in your browser with no extra installs.</p>
+        </div>
+      </div>
+      <div class="connection" id="connectionStatus">
+        <span class="dot"></span>
+        <span>Loading workspace...</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="agent-panel">
+        <section class="card">
+          <h2>1) Add your files</h2>
+          <p>Add PDF, JPG, or PNG files. Then drag the file rows in the workspace to set the final order.</p>
+          <div class="actions">
+            <button class="btn primary" id="openFilePicker">Add files</button>
+            <button class="btn ghost" id="clearQueue">Remove all files</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>2) Pick a quick style</h2>
+          <p>Choose one preset to set watermark and note style in one click.</p>
+          <div class="stack">
+            <button class="btn ghost" data-preset="draft">Draft Copy</button>
+            <button class="btn ghost" data-preset="review">Client Review</button>
+            <button class="btn ghost" data-preset="clean">Final Clean (No Text)</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>3) Optional page text</h2>
+          <label class="field">
+            <span>Watermark text</span>
+            <input id="agentWatermarkText" type="text" placeholder="Example: DRAFT COPY" />
+          </label>
+          <label class="field">
+            <span>Bottom note text</span>
+            <input id="agentFooterText" type="text" placeholder="Example: Internal use only" />
+          </label>
+          <div class="actions">
+            <button class="btn ghost" id="applyCustomText">Apply text</button>
+            <button class="btn ghost" id="clearText">Clear text</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>4) Page setup options</h2>
+          <p>Pick how photo pages are sized and how PDF page edges are handled.</p>
+          <label class="field">
+            <span>Photo page size</span>
+            <select id="agentImageSize">
+              <option value="match">Follow first PDF page size</option>
+              <option value="letter">US Letter</option>
+              <option value="a4">A4</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>PDF page framing</span>
+            <select id="agentPdfFit">
+              <option value="original">Keep full page</option>
+              <option value="trim">Remove extra margins when possible</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button class="btn ghost" id="applyDocOptions">Apply options</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>5) Fill and sign (optional)</h2>
+          <p>Add signer details and signature marks to selected pages.</p>
+          <label class="field">
+            <span>Signer full name</span>
+            <input id="agentSignName" type="text" placeholder="Example: Jordan Lee" />
+          </label>
+          <label class="field">
+            <span>Signer date</span>
+            <input id="agentSignDate" type="date" />
+          </label>
+          <label class="field">
+            <span>Extra line (optional)</span>
+            <input id="agentSignNote" type="text" placeholder="Example: Approved for release" />
+          </label>
+          <label class="field">
+            <span>Placement</span>
+            <select id="agentSignPlacement">
+              <option value="bottom-right">Bottom right</option>
+              <option value="bottom-left">Bottom left</option>
+              <option value="top-right">Top right</option>
+              <option value="center">Center</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Block opacity</span>
+            <input id="agentSignOpacity" type="range" min="30" max="100" step="1" value="95" />
+          </label>
+          <div class="actions">
+            <button class="btn ghost" id="applyFillSign">Apply fill and sign</button>
+            <button class="btn ghost" id="clearFillSign">Clear fill and sign text</button>
+          </div>
+          <div class="actions">
+            <button class="btn ghost" id="focusSignaturePad">Draw in workspace</button>
+            <button class="btn ghost" id="uploadSignature">Upload signature image</button>
+            <button class="btn ghost" id="clearSignatureImage">Clear signature image</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>6) Choose pages for each feature</h2>
+          <p>Use these buttons to turn each feature on for all pages or off for all pages.</p>
+          <div class="group">
+            <div class="group-title">Watermark pages</div>
+            <div class="actions">
+              <button class="btn ghost" id="wmAll">All pages</button>
+              <button class="btn ghost" id="wmNone">No pages</button>
+            </div>
+          </div>
+          <div class="group">
+            <div class="group-title">Bottom note pages</div>
+            <div class="actions">
+              <button class="btn ghost" id="ftAll">All pages</button>
+              <button class="btn ghost" id="ftNone">No pages</button>
+            </div>
+          </div>
+          <div class="group">
+            <div class="group-title">Fill and sign pages</div>
+            <div class="actions">
+              <button class="btn ghost" id="sgAll">All pages</button>
+              <button class="btn ghost" id="sgNone">No pages</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>7) Build and download</h2>
+          <p>When ready, build your final PDF and open the download link.</p>
+          <div class="actions">
+            <button class="btn primary" id="buildPdf">Build my PDF</button>
+            <button class="btn ghost" id="openDownload">Open download</button>
+          </div>
+        </section>
+
+        <section class="card log-card">
+          <h2>Activity</h2>
+          <ul id="agentLog" class="log-list"></ul>
+        </section>
+      </aside>
+
+      <section class="workspace-panel">
+        <div class="workspace-head">
+          <h2>Live Workspace</h2>
+          <p>The agent controls this in-browser workspace directly.</p>
+        </div>
+        <iframe
+          id="workspaceFrame"
+          title="SwiftPDF Workspace"
+          src="../PDF%20Stitch%20Into%20One%20File/index.html"></iframe>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>SwiftPDF Studio Agent</span>
+      <span>SwiftPDF Studio by GTBailey Tech Solutions LLC</span>
+    </footer>
+  </div>
+
+  <script src="agent.js"></script>
+</body>
+</html>

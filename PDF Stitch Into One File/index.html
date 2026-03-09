@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SwiftPDF Studio - PDF Stitch Into One File</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient orb-one"></div>
+    <div class="ambient orb-two"></div>
+
+    <main class="stage">
+      <header class="hero" style="--delay: 0ms">
+        <p class="eyebrow">Simple PDF helper</p>
+        <h1>PDF Stitch Into One File</h1>
+        <p class="subhead">
+          Bring your files together in one clean PDF. Add files, choose the order, adjust the look, and export when
+          it feels right. Everything stays on your device.
+        </p>
+      </header>
+
+      <section class="panel upload-panel" style="--delay: 80ms">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-copy">
+            <h2>Add your files</h2>
+            <p>Drop PDF, JPG, or PNG files here, or click to browse.</p>
+          </div>
+          <button type="button" class="primary" id="browseBtn">Choose files</button>
+          <input id="fileInput" type="file" accept="application/pdf,image/jpeg,image/png" multiple />
+        </div>
+        <p class="hint">Tip: You can add more files anytime. New files are added to the bottom of your list.</p>
+      </section>
+
+      <section class="panel queue-panel" style="--delay: 160ms">
+        <div class="queue-header">
+          <h2>Your file order</h2>
+          <button type="button" class="ghost" id="clearBtn">Remove all</button>
+        </div>
+        <p class="queue-hint">Drag each row to set the final page order.</p>
+        <ul id="fileList" class="file-list"></ul>
+        <div id="emptyState" class="empty-state">No files yet. Add your first file to begin.</div>
+      </section>
+
+      <section class="panel doc-preview-panel" style="--delay: 200ms">
+        <div class="doc-preview-header">
+          <h2>Live document preview</h2>
+          <p>See a real before-and-after view of your document in real time while you change settings.</p>
+        </div>
+        <div class="doc-preview-controls">
+          <label class="select-group compact">
+            <span>Preview file</span>
+            <select id="livePreviewSource">
+              <option value="auto">Use first file in order</option>
+            </select>
+            <span class="select-hint">Pick any file to preview page 1 before you export.</span>
+          </label>
+          <div class="doc-preview-meta" id="livePreviewMeta">Add a file to begin live preview.</div>
+        </div>
+        <div class="doc-preview-empty" id="livePreviewEmpty">Live preview will appear here.</div>
+        <div class="doc-preview-grid" id="livePreviewGrid" hidden>
+          <article class="doc-preview-card">
+            <div class="doc-preview-title">Current page</div>
+            <div class="doc-preview-frame-wrap">
+              <iframe id="livePreviewBefore" title="Current page preview"></iframe>
+            </div>
+          </article>
+          <article class="doc-preview-card">
+            <div class="doc-preview-title">With your current settings</div>
+            <div class="doc-preview-frame-wrap">
+              <iframe id="livePreviewAfter" title="Updated page preview"></iframe>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel preview-panel" style="--delay: 220ms">
+        <div class="preview-header">
+          <h2>Watermark style preview</h2>
+          <p>Check how your watermark and bottom note look on light and dark pages.</p>
+        </div>
+        <div class="preview-controls">
+          <label class="select-group compact">
+            <span>Preview page shape</span>
+            <select id="previewOrientation">
+              <option value="auto">Auto (follow first PDF page)</option>
+              <option value="portrait">Portrait page</option>
+              <option value="landscape">Landscape page</option>
+            </select>
+          </label>
+          <span class="preview-control-hint">This preview scales to your selected page shape.</span>
+        </div>
+        <div class="preview-grid" id="previewGrid">
+          <div class="preview-card">
+            <div class="preview-label">Light page</div>
+            <div class="preview-canvas preview-light">
+              <span class="preview-watermark" data-preview-watermark></span>
+              <span class="preview-footer" data-preview-footer></span>
+              <div class="preview-frame" data-preview-frame>
+                <div class="preview-handle" data-preview-handle aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-card">
+            <div class="preview-label">Warm page</div>
+            <div class="preview-canvas preview-warm">
+              <span class="preview-watermark" data-preview-watermark></span>
+              <span class="preview-footer" data-preview-footer></span>
+              <div class="preview-frame" data-preview-frame>
+                <div class="preview-handle" data-preview-handle aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-card">
+            <div class="preview-label">Cool page</div>
+            <div class="preview-canvas preview-cool">
+              <span class="preview-watermark" data-preview-watermark></span>
+              <span class="preview-footer" data-preview-footer></span>
+              <div class="preview-frame" data-preview-frame>
+                <div class="preview-handle" data-preview-handle aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-card">
+            <div class="preview-label">Dark page</div>
+            <div class="preview-canvas preview-dark">
+              <span class="preview-watermark" data-preview-watermark></span>
+              <span class="preview-footer" data-preview-footer></span>
+              <div class="preview-frame" data-preview-frame>
+                <div class="preview-handle" data-preview-handle aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="preview-hint">Drag the box to move your watermark. Use the corner handle to resize it.</p>
+      </section>
+
+      <section class="panel actions-panel" style="--delay: 280ms">
+        <div class="status-area">
+          <div class="status" id="status">Ready. Add files to begin.</div>
+          <label class="select-group">
+            <span>Photo page size</span>
+            <select id="imagePageSize">
+              <option value="match">Follow first PDF page size</option>
+              <option value="letter">US Letter (8.5 x 11 in)</option>
+              <option value="a4">A4 (210 x 297 mm)</option>
+            </select>
+            <span class="select-hint">Photos are resized to fit this page shape.</span>
+          </label>
+          <label class="select-group">
+            <span>PDF page framing</span>
+            <select id="pdfPageFit">
+              <option value="original">Keep full PDF page</option>
+              <option value="trim">Trim extra margins (if available)</option>
+            </select>
+            <span class="select-hint">Use trim when source PDFs contain crop settings.</span>
+          </label>
+          <label class="input-group">
+            <span>Watermark text</span>
+            <input id="watermarkText" type="text" placeholder="Example: Draft copy for ACME Team" />
+            <span class="input-hint">Leave blank if you do not want watermark text.</span>
+          </label>
+          <label class="slider-group">
+            <span>Watermark opacity</span>
+            <div class="slider-row">
+              <input id="watermarkOpacity" type="range" min="0.05" max="0.5" step="0.01" value="0.22" />
+              <span id="watermarkOpacityValue" class="slider-value">22%</span>
+            </div>
+          </label>
+          <label class="slider-group">
+            <span>Watermark tone</span>
+            <div class="slider-row">
+              <input id="watermarkTone" type="range" min="0" max="100" step="1" value="60" />
+              <span id="watermarkToneValue" class="slider-value">60%</span>
+            </div>
+            <span class="slider-hint">Move right for darker text, move left for lighter text.</span>
+          </label>
+          <label class="slider-group">
+            <span>Watermark size</span>
+            <div class="slider-row">
+              <input id="watermarkSize" type="range" min="50" max="200" step="1" value="100" />
+              <span id="watermarkSizeValue" class="slider-value">100%</span>
+            </div>
+            <span class="slider-hint">Controls how big the watermark text appears in the box.</span>
+          </label>
+          <label class="select-group">
+            <span>Watermark angle</span>
+            <select id="watermarkOrientation">
+              <option value="diagonal">Diagonal</option>
+              <option value="straight">Straight</option>
+              <option value="inverse">Diagonal (opposite)</option>
+            </select>
+            <span class="select-hint">Diagonal is easiest to see on draft pages.</span>
+          </label>
+          <div class="footer-pages watermark-pages">
+            <div class="footer-pages-header">
+              <span>Pages with watermark</span>
+              <div class="footer-pages-actions">
+                <button type="button" class="ghost small" id="watermarkSelectAll">All pages</button>
+                <button type="button" class="ghost small" id="watermarkSelectNone">No pages</button>
+              </div>
+            </div>
+            <div id="watermarkPageList" class="footer-page-list" role="list"></div>
+            <div id="watermarkPageEmpty" class="footer-page-empty">Add files to choose watermark pages.</div>
+          </div>
+          <label class="input-group">
+            <span>Bottom note text</span>
+            <input id="footerText" type="text" placeholder="Example: Internal draft - do not share" />
+            <span class="input-hint">Optional note shown at the bottom of selected pages.</span>
+          </label>
+          <label class="slider-group">
+            <span>Bottom note opacity</span>
+            <div class="slider-row">
+              <input id="footerOpacity" type="range" min="0.1" max="1" step="0.01" value="0.7" />
+              <span id="footerOpacityValue" class="slider-value">70%</span>
+            </div>
+          </label>
+          <label class="slider-group">
+            <span>Bottom note tone</span>
+            <div class="slider-row">
+              <input id="footerTone" type="range" min="0" max="100" step="1" value="13" />
+              <span id="footerToneValue" class="slider-value">13%</span>
+            </div>
+            <span class="slider-hint">Move right for darker text, move left for lighter text.</span>
+          </label>
+          <div class="footer-pages">
+            <div class="footer-pages-header">
+              <span>Pages with bottom note</span>
+              <div class="footer-pages-actions">
+                <button type="button" class="ghost small" id="footerSelectAll">All pages</button>
+                <button type="button" class="ghost small" id="footerSelectNone">No pages</button>
+              </div>
+            </div>
+            <div id="footerPageList" class="footer-page-list" role="list"></div>
+            <div id="footerPageEmpty" class="footer-page-empty">Add files to choose bottom note pages.</div>
+          </div>
+
+          <div class="fill-sign">
+            <div class="footer-pages-header">
+              <span>Fill and sign</span>
+            </div>
+            <p class="fill-sign-hint">Add signer details and signature marks directly onto selected pages.</p>
+
+            <label class="input-group">
+              <span>Signer full name</span>
+              <input id="signName" type="text" placeholder="Example: Jordan Lee" />
+            </label>
+
+            <label class="input-group">
+              <span>Signer date</span>
+              <input id="signDate" type="date" />
+            </label>
+
+            <label class="input-group">
+              <span>Extra line (optional)</span>
+              <input id="signNote" type="text" placeholder="Example: Approved for release" />
+            </label>
+
+            <label class="select-group">
+              <span>Signature placement</span>
+              <select id="signPlacement">
+                <option value="bottom-right">Bottom right</option>
+                <option value="bottom-left">Bottom left</option>
+                <option value="top-right">Top right</option>
+                <option value="center">Center</option>
+              </select>
+              <span class="select-hint">Choose where the fill and sign block appears on each selected page.</span>
+            </label>
+
+            <label class="slider-group">
+              <span>Signature block opacity</span>
+              <div class="slider-row">
+                <input id="signOpacity" type="range" min="0.3" max="1" step="0.01" value="0.95" />
+                <span id="signOpacityValue" class="slider-value">95%</span>
+              </div>
+            </label>
+
+            <div class="signature-pad-wrap">
+              <div class="signature-pad-header">
+                <span>Draw signature</span>
+                <button type="button" class="ghost small" id="signatureClear">Clear signature</button>
+              </div>
+              <canvas id="signaturePad" width="560" height="160"></canvas>
+              <p class="signature-pad-hint">Draw with mouse or touch. You can also upload a signature image below.</p>
+            </div>
+
+            <label class="input-group file-field">
+              <span>Or upload signature image</span>
+              <input id="signatureUpload" type="file" accept="image/png,image/jpeg" />
+              <span class="input-hint">If you upload an image, it replaces the drawing in the signed output.</span>
+            </label>
+
+            <div class="footer-pages">
+              <div class="footer-pages-header">
+                <span>Pages with fill and sign</span>
+                <div class="footer-pages-actions">
+                  <button type="button" class="ghost small" id="signSelectAll">All pages</button>
+                  <button type="button" class="ghost small" id="signSelectNone">No pages</button>
+                </div>
+              </div>
+              <div id="signPageList" class="footer-page-list" role="list"></div>
+              <div id="signPageEmpty" class="footer-page-empty">Add files to choose fill and sign pages.</div>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="primary" id="mergeBtn" disabled>Build my PDF</button>
+          <a id="downloadLink" class="secondary disabled" href="#" download="stitched.pdf">Download final PDF</a>
+        </div>
+      </section>
+    </main>
+
+    <noscript>
+      <div class="noscript">Please enable JavaScript to use this PDF stitching tool.</div>
+    </noscript>
+
+    <script src="vendor/pdf-lib.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

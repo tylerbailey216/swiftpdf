@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SwiftPDF Studio - Unified Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <img class="brand-logo" src="./SwiftPDF%20Studio%20Logo.png" alt="" />
+        </div>
+        <div class="brand-copy">
+          <div class="brand-title">SwiftPDF Studio</div>
+          <div class="brand-subtitle">Unified local workspace for your PDF production tools</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="chip">Local only workflow</div>
+        <button class="btn btn-outline" type="button" data-action="open-workspace">Open workspace</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-main">
+        <h1>Build, stitch, and finalize PDFs from one clean dashboard.</h1>
+        <p>
+          SwiftPDF Studio keeps everything in one simple browser workspace:
+          add and combine files, tune live preview settings, and export a final PDF.
+        </p>
+        <div class="hero-tags">
+          <span>PDF stitching</span>
+          <span>Live preview controls</span>
+          <span>Offline-first process</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-visual-title">Workflow snapshot</div>
+        <div class="hero-visual-body">Collect files -> stitch pages -> tune settings -> preview live -> export final PDF</div>
+        <div class="hero-visual-grid">
+          <div class="visual-chip">Queue and reorder files</div>
+          <div class="visual-chip">Live before/after previews</div>
+          <div class="visual-chip">Watermark controls</div>
+          <div class="visual-chip">Bottom note controls</div>
+          <div class="visual-chip">Page framing options</div>
+          <div class="visual-chip">Export one final PDF</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-tools">
+      <div class="section-title">Quick tools</div>
+      <div class="tool-grid">
+        <article class="tool-card" data-target="stitch">
+          <div class="tool-head">
+            <h3>PDF Stitch Into One File</h3>
+            <span class="tool-tag">Browser tool</span>
+          </div>
+          <p>Combine PDFs and photos, drag to reorder pages, add draft text if needed, and download one final PDF.</p>
+          <div class="tool-actions">
+            <button class="btn btn-small" type="button" data-target="stitch">Open in workspace</button>
+            <a class="btn btn-small btn-outline" href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open full page</a>
+          </div>
+        </article>
+
+        <article class="tool-card" data-target="stitch">
+          <div class="tool-head">
+            <h3>Live Preview and Styling</h3>
+            <span class="tool-tag">Browser tool</span>
+          </div>
+          <p>Preview your document in real time while you adjust watermark text, bottom note, page framing, and page order.</p>
+          <div class="tool-actions">
+            <button class="btn btn-small" type="button" data-target="stitch">Open in workspace</button>
+            <a class="btn btn-small btn-outline" href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open full page</a>
+          </div>
+        </article>
+
+        <article class="tool-card" data-target="library">
+          <div class="tool-head">
+            <h3>Help and File Library</h3>
+            <span class="tool-tag">Help</span>
+          </div>
+          <p>Open simple help links and shortcuts in one place when you want quick guidance.</p>
+          <div class="tool-actions">
+            <button class="btn btn-small" type="button" data-target="library">Open in workspace</button>
+            <button class="btn btn-small btn-outline" type="button" data-action="open-workspace">Go to workspace</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="workspace-wrap" id="workspace">
+      <div class="section-title">PDF workspace</div>
+
+      <div class="workspace-tabs">
+        <button class="tab active" type="button" data-target="stitch">Stitcher</button>
+        <button class="tab" type="button" data-target="library">File Library</button>
+      </div>
+
+      <div class="workspace-panels">
+        <article class="panel active" id="panel-stitch">
+          <div class="panel-header">
+            <div>
+              <h2>PDF Stitch Into One File</h2>
+              <p>Use the stitch tool right here with live previews, or open it in a full page tab.</p>
+            </div>
+            <div class="panel-badges">
+              <span>No upload required</span>
+              <span>Live document previews</span>
+            </div>
+          </div>
+          <div class="panel-actions">
+            <a class="btn" href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open full page stitcher</a>
+            <button class="btn btn-outline" type="button" data-action="toggle-stitch-embed">Hide embedded tool</button>
+            <a class="btn btn-outline" href="./PDF%20Stitch%20Into%20One%20File/README.md" target="_blank" rel="noopener">Open stitcher notes</a>
+          </div>
+          <div class="embed-wrap" id="stitch-embed-wrap">
+            <iframe
+              id="stitch-embed"
+              title="PDF Stitch Into One File"
+              src="./PDF%20Stitch%20Into%20One%20File/index.html"
+              loading="lazy"></iframe>
+          </div>
+        </article>
+
+        <article class="panel" id="panel-library">
+          <div class="panel-header">
+            <div>
+              <h2>Suite File Library</h2>
+              <p>Helpful links for browser-based use of SwiftPDF Studio.</p>
+            </div>
+            <div class="panel-badges">
+              <span>Fast navigation</span>
+              <span>Novice friendly</span>
+            </div>
+          </div>
+
+          <div class="library-grid">
+            <section class="meta-card">
+              <h3>Start here</h3>
+              <a href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open stitcher app</a>
+              <a href="./index.html" target="_blank" rel="noopener">Open dashboard home</a>
+              <a href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open full-page workspace</a>
+              <a href="./PDF%20Stitch%20Into%20One%20File/README.md" target="_blank" rel="noopener">Open quick guide</a>
+            </section>
+
+            <section class="meta-card">
+              <h3>Brand and help</h3>
+              <a href="./PDF%20Stitch%20Into%20One%20File/README.md" target="_blank" rel="noopener">Open usage guide</a>
+              <a href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open browser tool directly</a>
+              <a href="./SwiftPDF%20Studio%20Logo.png" target="_blank" rel="noopener">Open logo image</a>
+            </section>
+
+            <section class="meta-card">
+              <h3>Suite startup helpers</h3>
+              <button class="btn btn-outline" type="button" data-target="stitch">Go to Stitcher panel</button>
+              <button class="btn btn-outline" type="button" data-target="library">Stay on File Library panel</button>
+              <button class="btn btn-outline" type="button" data-action="open-workspace">Return to workspace top</button>
+            </section>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>SwiftPDF Studio by GTBailey Tech Solutions LLC</span>
+      <span id="year"></span>
+    </footer>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
