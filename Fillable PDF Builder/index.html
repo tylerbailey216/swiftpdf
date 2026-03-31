@@ -77,6 +77,7 @@
               <button type="button" class="ghost" id="addTextFieldBtn">Add short answer</button>
               <button type="button" class="ghost" id="addTextareaFieldBtn">Add paragraph box</button>
               <button type="button" class="ghost" id="addCheckboxFieldBtn">Add checkbox</button>
+              <button type="button" class="ghost" id="addSignatureFieldBtn">Add signature</button>
             </div>
           </div>
 
@@ -127,8 +128,33 @@
             </div>
           </div>
 
-          <div class="inspector-block export-block">
+          <div class="inspector-block signature-block">
             <p class="mini-label">Step 4</p>
+            <h2>Signature option</h2>
+            <p>Add a signature field, then use the options below to place a signature image or signer name into the final PDF.</p>
+
+            <label class="input-group">
+              <span>Signer name</span>
+              <input id="signatureNameInput" type="text" placeholder="Example: Jordan Bailey" />
+            </label>
+
+            <label class="input-group file-group">
+              <span>Signature image</span>
+              <input id="signatureUploadInput" type="file" accept="image/png,image/jpeg" />
+            </label>
+
+            <div class="signature-preview-card" id="signaturePreviewCard">
+              <div class="signature-preview-copy" id="signaturePreviewCopy">No signature image loaded yet. You can still use a typed signer name.</div>
+              <img id="signaturePreviewImage" alt="Signature preview" hidden />
+            </div>
+
+            <div class="inspector-actions">
+              <button type="button" class="ghost" id="clearSignatureBtn">Clear signature</button>
+            </div>
+          </div>
+
+          <div class="inspector-block export-block">
+            <p class="mini-label">Step 5</p>
             <h2>Export</h2>
             <p>
               When the page order and fields look right, build one fillable PDF and download it. You can still come

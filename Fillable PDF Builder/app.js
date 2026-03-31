@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   "use strict";
 
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
@@ -40,11 +40,18 @@
   const addTextFieldBtn = document.getElementById("addTextFieldBtn");
   const addTextareaFieldBtn = document.getElementById("addTextareaFieldBtn");
   const addCheckboxFieldBtn = document.getElementById("addCheckboxFieldBtn");
+  const addSignatureFieldBtn = document.getElementById("addSignatureFieldBtn");
   const fieldEmpty = document.getElementById("fieldEmpty");
   const fieldSettings = document.getElementById("fieldSettings");
   const fieldLabelInput = document.getElementById("fieldLabelInput");
   const fieldSummary = document.getElementById("fieldSummary");
   const removeFieldBtn = document.getElementById("removeFieldBtn");
+  const signatureNameInput = document.getElementById("signatureNameInput");
+  const signatureUploadInput = document.getElementById("signatureUploadInput");
+  const signaturePreviewCard = document.getElementById("signaturePreviewCard");
+  const signaturePreviewCopy = document.getElementById("signaturePreviewCopy");
+  const signaturePreviewImage = document.getElementById("signaturePreviewImage");
+  const clearSignatureBtn = document.getElementById("clearSignatureBtn");
   const buildBtn = document.getElementById("buildBtn");
   const downloadLink = document.getElementById("downloadLink");
 
@@ -63,6 +70,10 @@
     previewToken: 0,
     pdfPreviewCache: new Map(),
     interaction: null,
+    signatureName: "",
+    signatureDataUrl: null,
+    signatureMimeType: "",
+    signatureBytes: null,
   };
 
   function clamp(value, min, max) {
@@ -94,6 +105,7 @@
   function formatFieldType(kind) {
     if (kind === "text") return "Short answer";
     if (kind === "textarea") return "Paragraph box";
+    if (kind === "signature") return "Signature";
     return "Checkbox";
   }
 
@@ -101,6 +113,22 @@
     const widthIn = (width / 72).toFixed(1);
     const heightIn = (height / 72).toFixed(1);
     return widthIn + " x " + heightIn + " in";
+  }
+
+  function dataUrlToBytes(dataUrl) {
+    if (!dataUrl || typeof dataUrl !== "string" || dataUrl.indexOf(",") < 0) {
+      return null;
+    }
+    const payload = dataUrl.split(",")[1];
+    if (!payload) {
+      return null;
+    }
+    const binary = atob(payload);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    return bytes;
   }
 
   function resetDownloadLink() {
@@ -160,9 +188,31 @@
     addTextFieldBtn.disabled = !hasPage;
     addTextareaFieldBtn.disabled = !hasPage;
     addCheckboxFieldBtn.disabled = !hasPage;
+    addSignatureFieldBtn.disabled = !hasPage;
     removePageBtn.disabled = !hasPage;
     buildBtn.disabled = state.pages.length === 0;
     removeFieldBtn.disabled = !hasField;
+  }
+
+  function renderSignaturePreview() {
+    const hasImage = Boolean(state.signatureDataUrl);
+    signaturePreviewImage.hidden = !hasImage;
+    if (hasImage) {
+      signaturePreviewImage.src = state.signatureDataUrl;
+      signaturePreviewCopy.textContent = state.signatureName
+        ? "Signature image loaded. The exported PDF will place this image with the signer name " +
+          state.signatureName +
+          "."
+        : "Signature image loaded. The exported PDF will place this image inside each signature field.";
+      return;
+    }
+
+    signaturePreviewImage.removeAttribute("src");
+    signaturePreviewCopy.textContent = state.signatureName
+      ? "No signature image loaded. The exported PDF will use the typed signer name " +
+        state.signatureName +
+        " with a signature line."
+      : "No signature image loaded yet. You can still use a typed signer name.";
   }
 
   function getDefaultImagePageSize(width, height) {
@@ -598,7 +648,7 @@
         "</div>" +
         '<div class="page-copy">' +
         escapeHtml(page.sourceDetail) +
-        " • " +
+        " - " +
         fieldCount +
         " field" +
         (fieldCount === 1 ? "" : "s") +
@@ -641,9 +691,9 @@
     selectedPageTitle.textContent = page.sourceName;
     selectedPageMeta.textContent =
       page.sourceDetail +
-      " • " +
+      " - " +
       formatPageSize(page.width, page.height) +
-      " • " +
+      " - " +
       page.fields.length +
       " field" +
       (page.fields.length === 1 ? "" : "s");
@@ -666,7 +716,9 @@
         return entry.id === page.id;
       }) +
         1) +
-      ". Drag it on the page to move it. Resize it from the bottom-right corner.";
+      (field.kind === "signature"
+        ? ". Drag it where the signature should appear. The export uses your uploaded signature image or typed signer name."
+        : ". Drag it on the page to move it. Resize it from the bottom-right corner.");
   }
 
   function renderFieldLayer() {
@@ -685,11 +737,22 @@
       node.style.top = field.y * 100 + "%";
       node.style.width = field.width * 100 + "%";
       node.style.height = field.height * 100 + "%";
+      let bodyMarkup = '<div class="field-body"></div>';
+      if (field.kind === "signature") {
+        bodyMarkup =
+          '<div class="field-body"><div class="signature-stamp">' +
+          (state.signatureDataUrl
+            ? '<img src="' + state.signatureDataUrl + '" alt="" />'
+            : '<div class="signature-stamp-name">' +
+              escapeHtml(state.signatureName || "Signature") +
+              "</div>") +
+          "</div></div>";
+      }
       node.innerHTML =
         '<span class="field-label">' +
         escapeHtml(field.label) +
         "</span>" +
-        '<div class="field-body"></div>' +
+        bodyMarkup +
         '<div class="field-resize" data-action="resize-field" aria-hidden="true"></div>';
       fieldLayer.appendChild(node);
     });
@@ -705,13 +768,50 @@
       return null;
     }
 
-    const loadingTask = pdfjs.getDocument({ data: record.bytes });
+    const loadingTask = pdfjs.getDocument({
+      data: new Uint8Array(record.bytes),
+      isEvalSupported: false,
+      disableAutoFetch: true,
+      disableStream: true,
+      useWorkerFetch: false,
+    });
     const promise = loadingTask.promise.catch(function (error) {
       state.pdfPreviewCache.delete(documentId);
       throw error;
     });
     state.pdfPreviewCache.set(documentId, promise);
     return promise;
+  }
+
+  async function renderPdfPageToCanvas(page) {
+    const pdfDocument = await getPdfPreviewDocument(page.documentId);
+    if (!pdfDocument) {
+      throw new Error("PDF preview library is not available.");
+    }
+
+    const pdfPage = await pdfDocument.getPage(page.sourcePageIndex + 1);
+    const frameWidth = pageFrame ? pageFrame.clientWidth : 0;
+    const baseScale = frameWidth && page.width ? frameWidth / page.width : 1;
+    const pixelRatio = window.devicePixelRatio || 1;
+    const viewport = pdfPage.getViewport({
+      scale: Math.max(1.1, baseScale * pixelRatio),
+    });
+    const context = pdfCanvas.getContext("2d", { alpha: false });
+
+    pdfCanvas.width = Math.max(1, Math.floor(viewport.width));
+    pdfCanvas.height = Math.max(1, Math.floor(viewport.height));
+    pdfCanvas.style.width = "100%";
+    pdfCanvas.style.height = "100%";
+    context.save();
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+    context.restore();
+
+    await pdfPage.render({
+      canvasContext: context,
+      viewport: viewport,
+      intent: "display",
+    }).promise;
   }
 
   function renderDocxPreview(page) {
@@ -736,21 +836,10 @@
       pdfCanvas.hidden = false;
       const token = ++state.previewToken;
       try {
-        const pdfDocument = await getPdfPreviewDocument(page.documentId);
-        if (!pdfDocument || token !== state.previewToken) {
-          return;
-        }
-        const pdfPage = await pdfDocument.getPage(page.sourcePageIndex + 1);
+        await renderPdfPageToCanvas(page);
         if (token !== state.previewToken) {
           return;
         }
-
-        const viewport = pdfPage.getViewport({ scale: 1.6 });
-        pdfCanvas.width = Math.floor(viewport.width);
-        pdfCanvas.height = Math.floor(viewport.height);
-        const context = pdfCanvas.getContext("2d", { alpha: false });
-        context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-        await pdfPage.render({ canvasContext: context, viewport: viewport }).promise;
       } catch (error) {
         console.error(error);
         hideAllBackgrounds();
@@ -802,6 +891,7 @@
     renderPageList();
     renderEditor();
     renderInspector();
+    renderSignaturePreview();
     setToolAvailability();
   }
 
@@ -825,6 +915,11 @@
         label: "Paragraph box " + (sameKindCount + 1),
         width: 0.62,
         height: 0.2,
+      },
+      signature: {
+        label: "Signature " + (sameKindCount + 1),
+        width: 0.28,
+        height: 0.12,
       },
       checkbox: {
         label: "Checkbox " + (sameKindCount + 1),
@@ -995,7 +1090,7 @@
         field.width = clamp(state.interaction.initialWidth + dx, minSize, 0.98 - field.x);
         field.height = clamp(
           state.interaction.initialHeight + dy,
-          field.kind === "textarea" ? 0.14 : 0.07,
+          field.kind === "textarea" ? 0.14 : field.kind === "signature" ? 0.09 : 0.07,
           0.97 - field.y
         );
       }
@@ -1080,6 +1175,46 @@
     });
   }
 
+  function fitInsideRect(width, height, targetWidth, targetHeight) {
+    const scale = Math.min(targetWidth / width, targetHeight / height);
+    return {
+      width: width * scale,
+      height: height * scale,
+    };
+  }
+
+  function drawSignatureField(outputPage, field, rect, boldFont, signatureImage) {
+    drawFieldLabels(outputPage, field, rect, boldFont);
+
+    const lineY = rect.y + rect.height * 0.2;
+    outputPage.drawLine({
+      start: { x: rect.x, y: lineY },
+      end: { x: rect.x + rect.width, y: lineY },
+      thickness: 1,
+      color: rgb(0.32, 0.4, 0.5),
+    });
+
+    if (signatureImage) {
+      const availableWidth = Math.max(10, rect.width * 0.94);
+      const availableHeight = Math.max(10, rect.height * 0.62);
+      const size = fitInsideRect(signatureImage.width, signatureImage.height, availableWidth, availableHeight);
+      outputPage.drawImage(signatureImage.image, {
+        x: rect.x + (rect.width - size.width) / 2,
+        y: rect.y + rect.height * 0.3,
+        width: size.width,
+        height: size.height,
+      });
+    } else if (state.signatureName) {
+      outputPage.drawText(state.signatureName, {
+        x: rect.x + 4,
+        y: rect.y + rect.height * 0.46,
+        size: Math.min(18, Math.max(10, rect.height * 0.34)),
+        font: boldFont,
+        color: rgb(0.17, 0.24, 0.34),
+      });
+    }
+  }
+
   async function buildFillablePdf() {
     if (!state.pages.length) {
       return;
@@ -1095,6 +1230,7 @@
       const boldFont = await outputPdf.embedFont(StandardFonts.HelveticaBold);
       const sourcePdfCache = new Map();
       const imageCache = new Map();
+      const signatureImageCache = new Map();
 
       for (const page of state.pages) {
         let outputPage;
@@ -1150,14 +1286,13 @@
           });
         }
 
-        page.fields.forEach(function (field) {
+        for (const field of page.fields) {
           const rect = toPdfRect(page, field);
           const fieldName =
             "page-" + page.id + "-" + slugify(field.label || field.kind) + "-" + String(field.id);
 
-          drawFieldLabels(outputPage, field, rect, boldFont);
-
           if (field.kind === "checkbox") {
+            drawFieldLabels(outputPage, field, rect, boldFont);
             const size = Math.min(rect.width, rect.height);
             const checkbox = form.createCheckBox(fieldName);
             checkbox.addToPage(outputPage, {
@@ -1172,10 +1307,33 @@
             return;
           }
 
+          if (field.kind === "signature") {
+            let signatureImage = null;
+            if (state.signatureBytes && state.signatureMimeType) {
+              const cacheKey = state.signatureMimeType;
+              signatureImage = signatureImageCache.get(cacheKey) || null;
+              if (!signatureImage) {
+                const image =
+                  state.signatureMimeType === "image/png"
+                    ? await outputPdf.embedPng(state.signatureBytes)
+                    : await outputPdf.embedJpg(state.signatureBytes);
+                signatureImage = {
+                  image: image,
+                  width: image.width,
+                  height: image.height,
+                };
+                signatureImageCache.set(cacheKey, signatureImage);
+              }
+            }
+            drawSignatureField(outputPage, field, rect, boldFont, signatureImage);
+            return;
+          }
+
           const textField = form.createTextField(fieldName);
           if (field.kind === "textarea") {
             textField.enableMultiline();
           }
+          drawFieldLabels(outputPage, field, rect, boldFont);
           textField.addToPage(outputPage, {
             x: rect.x,
             y: rect.y,
@@ -1187,7 +1345,7 @@
             backgroundColor: rgb(1, 1, 1),
             textColor: rgb(0.1, 0.14, 0.19),
           });
-        });
+        }
       }
 
       const bytes = await outputPdf.save();
@@ -1262,6 +1420,10 @@
     addField("checkbox");
   });
 
+  addSignatureFieldBtn.addEventListener("click", function () {
+    addField("signature");
+  });
+
   pageList.addEventListener("click", function (event) {
     const target = event.target.closest("button[data-action]");
     if (!target) {
@@ -1320,6 +1482,52 @@
     renderInspector();
   });
 
+  signatureNameInput.addEventListener("input", function () {
+    state.signatureName = signatureNameInput.value.trim();
+    resetDownloadLink();
+    renderSignaturePreview();
+    renderFieldLayer();
+  });
+
+  signatureUploadInput.addEventListener("change", function () {
+    const file = signatureUploadInput.files && signatureUploadInput.files[0];
+    if (!file) {
+      return;
+    }
+    if (!file.type || (file.type !== "image/png" && file.type !== "image/jpeg")) {
+      setStatus("Please choose a PNG or JPG signature image.");
+      signatureUploadInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      const dataUrl = typeof reader.result === "string" ? reader.result : null;
+      state.signatureDataUrl = dataUrl;
+      state.signatureMimeType = file.type;
+      state.signatureBytes = dataUrlToBytes(dataUrl);
+      resetDownloadLink();
+      renderSignaturePreview();
+      renderFieldLayer();
+      setStatus("Signature image loaded.");
+    };
+    reader.onerror = function () {
+      setStatus("We could not read that signature image. Please try another one.");
+    };
+    reader.readAsDataURL(file);
+  });
+
+  clearSignatureBtn.addEventListener("click", function () {
+    state.signatureDataUrl = null;
+    state.signatureMimeType = "";
+    state.signatureBytes = null;
+    signatureUploadInput.value = "";
+    resetDownloadLink();
+    renderSignaturePreview();
+    renderFieldLayer();
+    setStatus("Signature cleared.");
+  });
+
   removeFieldBtn.addEventListener("click", removeSelectedField);
   buildBtn.addEventListener("click", buildFillablePdf);
 
@@ -1338,5 +1546,13 @@
     });
   });
 
+  window.addEventListener("resize", function () {
+    const page = getSelectedPage();
+    if (page && page.kind === "pdf") {
+      renderEditor();
+    }
+  });
+
   render();
 })();
+
