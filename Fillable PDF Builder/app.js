@@ -845,10 +845,16 @@
     context.fillRect(0, 0, pdfCanvas.width, pdfCanvas.height);
     context.restore();
 
+    const annotationMode =
+      pdfjs && pdfjs.AnnotationMode && pdfjs.AnnotationMode.ENABLE_FORMS !== undefined
+        ? pdfjs.AnnotationMode.ENABLE_FORMS
+        : undefined;
+
     await pdfPage.render({
       canvasContext: context,
       viewport: viewport,
       intent: "display",
+      annotationMode: annotationMode,
     }).promise;
   }
 
