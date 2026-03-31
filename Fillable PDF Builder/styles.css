@@ -365,6 +365,18 @@ body {
   background: #fff;
 }
 
+#pdfCanvas[hidden],
+#imagePreview[hidden],
+.docx-preview[hidden],
+.blank-preview[hidden],
+.editor-stage-wrap[hidden],
+.field-settings[hidden],
+.editor-empty[hidden],
+.inspector-empty[hidden],
+.empty-state[hidden] {
+  display: none !important;
+}
+
 #pdfCanvas {
   object-fit: contain;
 }
