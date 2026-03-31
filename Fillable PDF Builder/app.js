@@ -3,6 +3,7 @@
 
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
   const pdfjs = window.pdfjsLib;
+  const PDF_CMAP_URL = new URL("./vendor/cmaps/", window.location.href).toString();
   const PDF_STANDARD_FONT_DATA_URL = new URL(
     "./vendor/standard_fonts/",
     window.location.href
@@ -777,6 +778,8 @@
 
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(record.bytes),
+      cMapUrl: PDF_CMAP_URL,
+      cMapPacked: true,
       standardFontDataUrl: PDF_STANDARD_FONT_DATA_URL,
       isEvalSupported: false,
       disableAutoFetch: true,
