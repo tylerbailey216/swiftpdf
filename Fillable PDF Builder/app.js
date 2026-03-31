@@ -123,6 +123,33 @@
     return widthIn + " x " + heightIn + " in";
   }
 
+  function formatPreviewError(error) {
+    if (!error) {
+      return "PDF preview could not be shown, but export is still available.";
+    }
+
+    const rawMessage =
+      typeof error.message === "string" && error.message.trim()
+        ? error.message.trim()
+        : typeof error.name === "string" && error.name.trim()
+          ? error.name.trim()
+          : "Unknown preview error";
+
+    if (/password/i.test(rawMessage)) {
+      return "This PDF is password-protected, so the live preview cannot be shown here yet.";
+    }
+
+    if (/invalid pdf/i.test(rawMessage)) {
+      return "This file does not look like a readable PDF to the preview engine.";
+    }
+
+    if (/xfa/i.test(rawMessage)) {
+      return "This PDF uses an advanced XFA form format that this live preview cannot render yet.";
+    }
+
+    return "PDF preview issue: " + rawMessage;
+  }
+
   function dataUrlToBytes(dataUrl) {
     if (!dataUrl || typeof dataUrl !== "string" || dataUrl.indexOf(",") < 0) {
       return null;
@@ -855,8 +882,8 @@
         console.error(error);
         hideAllBackgrounds();
         blankPreview.hidden = false;
-        blankPreview.querySelector("span").textContent =
-          "PDF preview could not be shown, but export is still available.";
+        blankPreview.querySelector("span").textContent = formatPreviewError(error);
+        setStatus("Preview issue detected. The PDF can still be exported.");
       }
       return;
     }
