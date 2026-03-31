@@ -30,10 +30,11 @@
         <h1>Build, stitch, and finalize PDFs from one clean dashboard.</h1>
         <p>
           SwiftPDF Studio keeps everything in one simple browser workspace:
-          add and combine files, tune live preview settings, and export a final PDF.
+          add and combine files, build fillable forms from documents and images, tune live preview settings, and export a final PDF.
         </p>
         <div class="hero-tags">
           <span>PDF stitching</span>
+          <span>Fillable form builder</span>
           <span>Live preview controls</span>
           <span>Offline-first process</span>
         </div>
@@ -41,12 +42,14 @@
       <div class="hero-visual">
         <div class="hero-visual-title">Workflow snapshot</div>
         <div class="hero-visual-body">Collect files -> stitch pages -> tune settings -> preview live -> export final PDF</div>
-        <div class="hero-visual-grid">
+          <div class="hero-visual-grid">
           <div class="visual-chip">Queue and reorder files</div>
+          <div class="visual-chip">Add fillable form fields</div>
           <div class="visual-chip">Live before/after previews</div>
+          <div class="visual-chip">Word and image form import</div>
           <div class="visual-chip">Watermark controls</div>
           <div class="visual-chip">Bottom note controls</div>
-          <div class="visual-chip">Page framing options</div>
+          <div class="visual-chip">Add or remove pages</div>
           <div class="visual-chip">Export one final PDF</div>
         </div>
       </div>
@@ -79,6 +82,18 @@
           </div>
         </article>
 
+        <article class="tool-card" data-target="forms">
+          <div class="tool-head">
+            <h3>Fillable PDF Builder</h3>
+            <span class="tool-tag">Browser tool</span>
+          </div>
+          <p>Turn a PDF, JPG, PNG, or Word .docx file into a fillable PDF form, add or remove pages, place fields, and download the result.</p>
+          <div class="tool-actions">
+            <button class="btn btn-small" type="button" data-target="forms">Open in workspace</button>
+            <a class="btn btn-small btn-outline" href="./Fillable%20PDF%20Builder/index.html" target="_blank" rel="noopener">Open full page</a>
+          </div>
+        </article>
+
         <article class="tool-card" data-target="library">
           <div class="tool-head">
             <h3>Help and File Library</h3>
@@ -98,6 +113,7 @@
 
       <div class="workspace-tabs">
         <button class="tab active" type="button" data-target="stitch">Stitcher</button>
+        <button class="tab" type="button" data-target="forms">Form Builder</button>
         <button class="tab" type="button" data-target="library">File Library</button>
       </div>
 
@@ -115,7 +131,7 @@
           </div>
           <div class="panel-actions">
             <a class="btn" href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open full page stitcher</a>
-            <button class="btn btn-outline" type="button" data-action="toggle-stitch-embed">Hide embedded tool</button>
+            <button class="btn btn-outline" type="button" data-action="toggle-embed" data-embed-wrap="stitch-embed-wrap">Hide embedded tool</button>
             <a class="btn btn-outline" href="./PDF%20Stitch%20Into%20One%20File/README.md" target="_blank" rel="noopener">Open stitcher notes</a>
           </div>
           <div class="embed-wrap" id="stitch-embed-wrap">
@@ -123,6 +139,30 @@
               id="stitch-embed"
               title="PDF Stitch Into One File"
               src="./PDF%20Stitch%20Into%20One%20File/index.html"
+              loading="lazy"></iframe>
+          </div>
+        </article>
+
+        <article class="panel" id="panel-forms">
+          <div class="panel-header">
+            <div>
+              <h2>Fillable PDF Builder</h2>
+              <p>Use the browser form builder right here to turn a document into a fillable PDF with editable fields and page controls.</p>
+            </div>
+            <div class="panel-badges">
+              <span>PDF, JPG, PNG, DOCX</span>
+              <span>Page add and remove</span>
+            </div>
+          </div>
+          <div class="panel-actions">
+            <a class="btn" href="./Fillable%20PDF%20Builder/index.html" target="_blank" rel="noopener">Open full page form builder</a>
+            <button class="btn btn-outline" type="button" data-action="toggle-embed" data-embed-wrap="forms-embed-wrap">Hide embedded tool</button>
+          </div>
+          <div class="embed-wrap" id="forms-embed-wrap">
+            <iframe
+              id="forms-embed"
+              title="Fillable PDF Builder"
+              src="./Fillable%20PDF%20Builder/index.html"
               loading="lazy"></iframe>
           </div>
         </article>
@@ -143,8 +183,9 @@
             <section class="meta-card">
               <h3>Start here</h3>
               <a href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open stitcher app</a>
+              <a href="./Fillable%20PDF%20Builder/index.html" target="_blank" rel="noopener">Open fillable form builder</a>
               <a href="./index.html" target="_blank" rel="noopener">Open dashboard home</a>
-              <a href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open full-page workspace</a>
+              <a href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open full-page stitcher</a>
               <a href="./PDF%20Stitch%20Into%20One%20File/README.md" target="_blank" rel="noopener">Open quick guide</a>
             </section>
 
@@ -152,12 +193,14 @@
               <h3>Brand and help</h3>
               <a href="./PDF%20Stitch%20Into%20One%20File/README.md" target="_blank" rel="noopener">Open usage guide</a>
               <a href="./PDF%20Stitch%20Into%20One%20File/index.html" target="_blank" rel="noopener">Open browser tool directly</a>
+              <a href="./Fillable%20PDF%20Builder/index.html" target="_blank" rel="noopener">Open form tool directly</a>
               <a href="./SwiftPDF%20Studio%20Logo.png" target="_blank" rel="noopener">Open logo image</a>
             </section>
 
             <section class="meta-card">
               <h3>Suite startup helpers</h3>
               <button class="btn btn-outline" type="button" data-target="stitch">Go to Stitcher panel</button>
+              <button class="btn btn-outline" type="button" data-target="forms">Go to Form Builder panel</button>
               <button class="btn btn-outline" type="button" data-target="library">Stay on File Library panel</button>
               <button class="btn btn-outline" type="button" data-action="open-workspace">Return to workspace top</button>
             </section>

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SwiftPDF Studio - Fillable PDF Builder</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%BB%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient orb-one"></div>
+    <div class="ambient orb-two"></div>
+
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">Browser-only form builder</p>
+        <h1>Turn a document into a fillable PDF</h1>
+        <p class="subhead">
+          Start with a PDF, JPG, PNG, or Word file, clean up the page order, place form fields where you want them,
+          and download a fillable PDF when you are ready. Everything stays in the browser. Legacy Word
+          <code>.doc</code> files need to be resaved as <code>.docx</code> first.
+        </p>
+      </header>
+
+      <section class="panel top-grid">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-copy">
+            <h2>Add your starting file</h2>
+            <p>Drop in a PDF, JPG, PNG, or Word <code>.docx</code> file, or click to browse.</p>
+          </div>
+          <button type="button" class="primary" id="browseBtn">Choose file</button>
+          <input
+            id="fileInput"
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        </div>
+
+        <div class="quick-actions">
+          <div class="quick-actions-head">
+            <h2>Page tools</h2>
+            <p>Add pages, remove what you do not need, and keep the final form simple.</p>
+          </div>
+          <div class="quick-actions-buttons">
+            <button type="button" class="ghost" id="addBlankPageBtn">Add blank page</button>
+            <button type="button" class="ghost" id="removePageBtn" disabled>Remove selected page</button>
+          </div>
+          <div class="status" id="status">Ready. Add a file to begin.</div>
+          <p class="quick-note">
+            Tip: PDF pages stay as PDF pages, image pages stay as image pages, and Word <code>.docx</code> files are
+            brought in as clean text pages so they can still become a fillable PDF in the browser.
+          </p>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel rail">
+          <div class="rail-head">
+            <div>
+              <p class="mini-label">Step 1</p>
+              <h2>Your pages</h2>
+            </div>
+            <p>Choose a page to edit, then move it up, move it down, or remove it.</p>
+          </div>
+          <ul class="page-list" id="pageList"></ul>
+          <div class="empty-state" id="pageEmpty">No pages yet. Add your first file to start building a form.</div>
+        </aside>
+
+        <section class="panel editor">
+          <div class="editor-head">
+            <div>
+              <p class="mini-label">Step 2</p>
+              <h2>Live page editor</h2>
+              <p>Pick a page, then add fields and drag them into place.</p>
+            </div>
+            <div class="tool-row">
+              <button type="button" class="ghost" id="addTextFieldBtn">Add short answer</button>
+              <button type="button" class="ghost" id="addTextareaFieldBtn">Add paragraph box</button>
+              <button type="button" class="ghost" id="addCheckboxFieldBtn">Add checkbox</button>
+            </div>
+          </div>
+
+          <div class="editor-empty" id="editorEmpty">Choose a page from the list to begin placing form fields.</div>
+
+          <div class="editor-stage-wrap" id="editorStageWrap" hidden>
+            <div class="editor-meta">
+              <div class="editor-meta-title" id="selectedPageTitle">No page selected</div>
+              <div class="editor-meta-copy" id="selectedPageMeta">Page details will appear here.</div>
+            </div>
+            <div class="page-frame" id="pageFrame" style="--page-ratio: 0.7727">
+              <div class="page-surface" id="pageSurface">
+                <canvas id="pdfCanvas" hidden></canvas>
+                <img id="imagePreview" alt="" hidden />
+                <div class="docx-preview" id="docxPreview" hidden></div>
+                <div class="blank-preview" id="blankPreview" hidden>
+                  <span>Blank page ready for fields</span>
+                </div>
+                <div class="field-layer" id="fieldLayer"></div>
+              </div>
+            </div>
+            <p class="editor-hint">
+              Drag a field to move it. Use the bottom-right handle to resize it. Checkbox labels stay beside the box so
+              the form is easier to read.
+            </p>
+          </div>
+        </section>
+
+        <aside class="panel inspector">
+          <div class="inspector-block">
+            <p class="mini-label">Step 3</p>
+            <h2>Selected field</h2>
+            <div class="inspector-empty" id="fieldEmpty">
+              Add or select a field to rename it or remove it from the current page.
+            </div>
+
+            <div class="field-settings" id="fieldSettings" hidden>
+              <label class="input-group">
+                <span>Field label</span>
+                <input id="fieldLabelInput" type="text" placeholder="Example: Full name" />
+              </label>
+
+              <div class="field-summary" id="fieldSummary"></div>
+
+              <div class="inspector-actions">
+                <button type="button" class="ghost" id="removeFieldBtn">Remove selected field</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="inspector-block export-block">
+            <p class="mini-label">Step 4</p>
+            <h2>Export</h2>
+            <p>
+              When the page order and fields look right, build one fillable PDF and download it. You can still come
+              back and adjust the layout before you build again.
+            </p>
+            <div class="export-actions">
+              <button type="button" class="primary" id="buildBtn" disabled>Build fillable PDF</button>
+              <a class="secondary disabled" id="downloadLink" href="#" download="swiftpdf-fillable-form.pdf">Download fillable PDF</a>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <noscript>
+      <div class="noscript">Please enable JavaScript to use the fillable PDF builder.</div>
+    </noscript>
+
+    <script src="vendor/pdf-lib.min.js"></script>
+    <script src="vendor/pdf.min.js"></script>
+    <script src="vendor/mammoth.browser.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

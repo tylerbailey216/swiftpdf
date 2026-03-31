@@ -5,10 +5,8 @@
   var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
   var targetButtons = Array.prototype.slice.call(document.querySelectorAll("[data-target]"));
   var workspace = document.getElementById("workspace");
-  var toggleEmbedBtn = document.querySelector('[data-action="toggle-stitch-embed"]');
-  var stitchEmbedWrap = document.getElementById("stitch-embed-wrap");
-  var stitchEmbed = document.getElementById("stitch-embed");
-  var stitchResizeTimer = null;
+  var embedFrames = Array.prototype.slice.call(document.querySelectorAll(".embed-wrap iframe"));
+  var embedResizeTimer = null;
   var yearLabel = document.getElementById("year");
 
   function setActivePanel(target) {
@@ -35,12 +33,12 @@
     workspace.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function syncStitchEmbedHeight() {
-    if (!stitchEmbed) {
+  function syncEmbedHeight(frame) {
+    if (!frame) {
       return;
     }
     try {
-      var doc = stitchEmbed.contentDocument;
+      var doc = frame.contentDocument;
       if (!doc || !doc.body) {
         return;
       }
@@ -49,11 +47,15 @@
         doc.documentElement ? doc.documentElement.scrollHeight : 0
       );
       if (height > 0) {
-        stitchEmbed.style.height = String(height + 20) + "px";
+        frame.style.height = String(height + 20) + "px";
       }
     } catch (error) {
       // If access is restricted in a given browser context, keep the default height.
     }
+  }
+
+  function syncAllEmbedHeights() {
+    embedFrames.forEach(syncEmbedHeight);
   }
 
   function fallbackCopyText(text) {
@@ -114,30 +116,39 @@
     button.addEventListener("click", scrollToWorkspace);
   });
 
-  if (toggleEmbedBtn && stitchEmbedWrap) {
-    toggleEmbedBtn.addEventListener("click", function () {
-      var isHidden = stitchEmbedWrap.hasAttribute("hidden");
+  document.querySelectorAll('[data-action="toggle-embed"]').forEach(function (button) {
+    button.addEventListener("click", function () {
+      var wrapId = button.getAttribute("data-embed-wrap");
+      if (!wrapId) {
+        return;
+      }
+      var wrap = document.getElementById(wrapId);
+      if (!wrap) {
+        return;
+      }
+      var isHidden = wrap.hasAttribute("hidden");
       if (isHidden) {
-        stitchEmbedWrap.removeAttribute("hidden");
-        toggleEmbedBtn.textContent = "Hide embedded tool";
-        syncStitchEmbedHeight();
+        wrap.removeAttribute("hidden");
+        button.textContent = "Hide embedded tool";
+        var frame = wrap.querySelector("iframe");
+        syncEmbedHeight(frame);
       } else {
-        stitchEmbedWrap.setAttribute("hidden", "hidden");
-        toggleEmbedBtn.textContent = "Show embedded tool";
+        wrap.setAttribute("hidden", "hidden");
+        button.textContent = "Show embedded tool";
       }
     });
-  }
+  });
 
-  if (stitchEmbed) {
-    stitchEmbed.addEventListener("load", function () {
-      syncStitchEmbedHeight();
-      if (stitchResizeTimer) {
-        window.clearInterval(stitchResizeTimer);
+  embedFrames.forEach(function (frame) {
+    frame.addEventListener("load", function () {
+      syncEmbedHeight(frame);
+      if (embedResizeTimer) {
+        window.clearInterval(embedResizeTimer);
       }
-      stitchResizeTimer = window.setInterval(syncStitchEmbedHeight, 1200);
+      embedResizeTimer = window.setInterval(syncAllEmbedHeights, 1200);
     });
-    window.addEventListener("resize", syncStitchEmbedHeight);
-  }
+  });
+  window.addEventListener("resize", syncAllEmbedHeights);
 
   document.querySelectorAll("[data-copy-target]").forEach(function (button) {
     button.addEventListener("click", function () {
