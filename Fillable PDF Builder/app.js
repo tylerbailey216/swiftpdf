@@ -3,9 +3,16 @@
 
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
   const pdfjs = window.pdfjsLib;
+  const PDF_STANDARD_FONT_DATA_URL = new URL(
+    "./vendor/standard_fonts/",
+    window.location.href
+  ).toString();
 
   if (pdfjs && pdfjs.GlobalWorkerOptions) {
-    pdfjs.GlobalWorkerOptions.workerSrc = "./vendor/pdf.worker.min.js";
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      "./vendor/pdf.worker.min.js",
+      window.location.href
+    ).toString();
   }
 
   const LETTER_PORTRAIT = { width: 612, height: 792 };
@@ -770,6 +777,7 @@
 
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(record.bytes),
+      standardFontDataUrl: PDF_STANDARD_FONT_DATA_URL,
       isEvalSupported: false,
       disableAutoFetch: true,
       disableStream: true,
