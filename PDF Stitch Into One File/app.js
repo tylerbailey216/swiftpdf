@@ -91,6 +91,9 @@ let livePreviewBeforeUrl = null;
 let livePreviewAfterUrl = null;
 let livePreviewDebounceTimer = null;
 let livePreviewToken = 0;
+let livePreviewBeforeKey = null;
+let livePreviewAfterKey = null;
+let livePreviewPendingKey = null;
 let signatureDataUrl = null;
 let signaturePadContext = null;
 let signaturePadDrawing = null;
@@ -853,6 +856,26 @@ const revokeLivePreviewUrls = () => {
     URL.revokeObjectURL(livePreviewAfterUrl);
     livePreviewAfterUrl = null;
   }
+  livePreviewBeforeKey = null;
+  livePreviewAfterKey = null;
+  livePreviewPendingKey = null;
+};
+
+const replaceLivePreviewUrl = (frame, nextUrl, previousUrl) => {
+  if (!frame || !nextUrl) return;
+
+  if (previousUrl) {
+    let revoked = false;
+    const revokePrevious = () => {
+      if (revoked) return;
+      revoked = true;
+      URL.revokeObjectURL(previousUrl);
+    };
+    frame.addEventListener("load", () => window.setTimeout(revokePrevious, 250), { once: true });
+    window.setTimeout(revokePrevious, 5000);
+  }
+
+  frame.src = nextUrl;
 };
 
 const showLivePreviewEmpty = (message) => {
@@ -900,6 +923,37 @@ const getLivePreviewItem = () => {
   const selectedId = Number(livePreviewSourceSelect.value);
   const selected = queue.find((item) => item.id === selectedId);
   return selected || queue[0];
+};
+
+const getLivePreviewBeforeKey = (item) => {
+  const imagePreference = imagePageSizeSelect?.value ?? "match";
+  const referencePdf = queue.find((entry) => entry.kind === "pdf");
+  const usesReferencePdf = item.kind !== "pdf" && imagePreference === "match";
+  return JSON.stringify({
+    itemId: item.id,
+    kind: item.kind,
+    pdfFit: getPdfPageFitMode(),
+    imagePreference,
+    referencePdfId: usesReferencePdf ? referencePdf?.id ?? null : null,
+    referencePdfSize: usesReferencePdf ? referencePdf?.pageSize ?? null : null,
+    referencePdfTrimSize: usesReferencePdf ? referencePdf?.pageTrimSize ?? null : null,
+  });
+};
+
+const getLivePreviewAfterKey = (item, beforeKey) => {
+  const pageKey = `${item.id}:0`;
+  return JSON.stringify({
+    beforeKey,
+    watermarkText: getWatermarkText(),
+    watermarkSettings: getWatermarkSettings(),
+    watermarkBox,
+    applyWatermark: shouldApplyWatermark(pageKey),
+    footerText: getFooterText(),
+    footerSettings: getFooterSettings(),
+    applyFooter: shouldApplyFooter(pageKey),
+    signInfo: getSignSettings(),
+    applySign: shouldApplySign(pageKey),
+  });
 };
 
 const buildPreviewPdfForItem = async (item, withSettings) => {
@@ -1003,6 +1057,7 @@ const updateLivePreview = async () => {
 
   const item = getLivePreviewItem();
   if (!item) {
+    livePreviewToken += 1;
     revokeLivePreviewUrls();
     livePreviewBeforeFrame.removeAttribute("src");
     livePreviewAfterFrame.removeAttribute("src");
@@ -1010,40 +1065,61 @@ const updateLivePreview = async () => {
     return;
   }
 
+  const beforeKey = getLivePreviewBeforeKey(item);
+  const afterKey = getLivePreviewAfterKey(item, beforeKey);
+  const pendingKey = `${beforeKey}\n${afterKey}`;
+  if (pendingKey === livePreviewPendingKey) return;
+
+  const refreshBefore = beforeKey !== livePreviewBeforeKey || !livePreviewBeforeUrl;
+  const refreshAfter = afterKey !== livePreviewAfterKey || !livePreviewAfterUrl;
+  if (!refreshBefore && !refreshAfter) return;
+
   const token = ++livePreviewToken;
-  livePreviewMeta.textContent = `Previewing page 1: ${item.file.name}`;
-  livePreviewEmpty.textContent = "Refreshing preview...";
-  livePreviewEmpty.hidden = false;
-  livePreviewGrid.hidden = true;
+  livePreviewPendingKey = pendingKey;
+  livePreviewMeta.textContent = `Updating page 1: ${item.file.name}`;
+  const hasVisiblePreview = Boolean(livePreviewBeforeUrl || livePreviewAfterUrl);
+  livePreviewEmpty.textContent = "Preparing preview...";
+  livePreviewEmpty.hidden = hasVisiblePreview;
+  livePreviewGrid.hidden = !hasVisiblePreview;
+  livePreviewGrid.setAttribute("aria-busy", "true");
 
   try {
     const [beforeBlob, afterBlob] = await Promise.all([
-      buildPreviewPdfForItem(item, false),
-      buildPreviewPdfForItem(item, true),
+      refreshBefore ? buildPreviewPdfForItem(item, false) : Promise.resolve(null),
+      refreshAfter ? buildPreviewPdfForItem(item, true) : Promise.resolve(null),
     ]);
     if (token !== livePreviewToken) {
       return;
     }
 
-    const nextBeforeUrl = URL.createObjectURL(beforeBlob);
-    const nextAfterUrl = URL.createObjectURL(afterBlob);
-
-    if (livePreviewBeforeUrl) {
-      URL.revokeObjectURL(livePreviewBeforeUrl);
+    if (beforeBlob) {
+      const previousBeforeUrl = livePreviewBeforeUrl;
+      const nextBeforeUrl = URL.createObjectURL(beforeBlob);
+      livePreviewBeforeUrl = nextBeforeUrl;
+      livePreviewBeforeKey = beforeKey;
+      replaceLivePreviewUrl(livePreviewBeforeFrame, nextBeforeUrl, previousBeforeUrl);
     }
-    if (livePreviewAfterUrl) {
-      URL.revokeObjectURL(livePreviewAfterUrl);
+    if (afterBlob) {
+      const previousAfterUrl = livePreviewAfterUrl;
+      const nextAfterUrl = URL.createObjectURL(afterBlob);
+      livePreviewAfterUrl = nextAfterUrl;
+      livePreviewAfterKey = afterKey;
+      replaceLivePreviewUrl(livePreviewAfterFrame, nextAfterUrl, previousAfterUrl);
     }
 
-    livePreviewBeforeUrl = nextBeforeUrl;
-    livePreviewAfterUrl = nextAfterUrl;
-    livePreviewBeforeFrame.src = livePreviewBeforeUrl;
-    livePreviewAfterFrame.src = livePreviewAfterUrl;
+    livePreviewMeta.textContent = `Previewing page 1: ${item.file.name}`;
     livePreviewEmpty.hidden = true;
     livePreviewGrid.hidden = false;
   } catch (error) {
     console.error(error);
-    showLivePreviewEmpty("Live preview is unavailable for this file right now.");
+    if (token === livePreviewToken && !livePreviewBeforeUrl && !livePreviewAfterUrl) {
+      showLivePreviewEmpty("Live preview is unavailable for this file right now.");
+    }
+  } finally {
+    if (token === livePreviewToken) {
+      livePreviewPendingKey = null;
+      livePreviewGrid.removeAttribute("aria-busy");
+    }
   }
 };
 
